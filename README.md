@@ -1,7 +1,7 @@
 # Desafio 
 
 ## Descrição 
-Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty para exibir uma lista de personagens. A aplicação possibilita ao usuário realizar buscas por nome e aplicar filtros com base no status dos personagens. Além disso, conta com uma funcionalidade de rolagem infinita, que carrega automaticamente novos personagens à medida que o usuário navega para o final da página, e uma busca avançada que considera simultaneamente o nome e o status.
+Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty para exibir uma lista de personagens. A aplicação possibilita ao usuário realizar buscas por nome e aplicar filtros com base no status dos personagens. Além disso, conta com uma funcionalidade de rolagem infinita, que carrega automaticamente novos personagens à medida que o usuário navega para o final da página, e uma busca avançada que considera simultaneamente o nome e o status. Nos detalhes é possível adicionar um novo item, salva, alterar ou excluir a origem. 
 
 ## Tecnologias Usadas
 - **Angular**
