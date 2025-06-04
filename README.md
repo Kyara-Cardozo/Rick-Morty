@@ -14,7 +14,7 @@ Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty
     ```bash
     git clone https://github.com/Kyara-Cardozo/Rick-Morty.git
     ```
-2. Navegue até o diretório do projeto:
+2. Abra o VS Code na pasta onde realizou o clone do projeto, e navegue até o diretório do projeto:
     ```bash
     cd Rick-and-Morty 
     ```
