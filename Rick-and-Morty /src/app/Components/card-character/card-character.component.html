@@ -1,0 +1,33 @@
+<div *ngIf="!loading" class="container-fluid d-flex flex-wrap justify-content-center align-items-center">
+  <div class="card mb-3 col-6" *ngFor="let card of characters; index as i">
+    <div class="row g-0">
+      <div class="col-md-6">
+        <img [src]="characters[i].image" class="img-fluid rounded-start imgCharacter" alt="image characters">
+      </div>
+      <div class="col-md-6">
+        <div class="card-body">
+          <h5 class="card-title">{{ characters[i].name == '' || characters[i].name == null ? 'Sem conteúdo' :
+            characters[i].name }}</h5>
+          <p class="card-text">
+            <strong>Status:</strong> {{ characters[i].status == '' || characters[i].status == null ? 'Sem conteúdo' :
+            characters[i].status }}<br>
+            <strong>Especie:</strong> {{ characters[i].species == '' || characters[i].species == null ? 'Sem conteúdo' :
+            characters[i].species }}<br>
+            <strong>Tipo:</strong> {{ characters[i].type == '' || characters[i].type == null ? 'Sem conteúdo' :
+            characters[i].type }}<br>
+            <strong>Gender:</strong> {{ characters[i].gender == '' || characters[i].gender == null ? 'Sem conteúdo' :
+            characters[i].gender }}
+          </p>
+          <a [href]="['/details/'+characters[i].id]" class="btn btn-primary">Ver detalhes</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="loading" class="d-flex justify-content-center loading">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Carregando...</span>
+  </div>
+</div>

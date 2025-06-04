@@ -1,0 +1,31 @@
+<nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+  <div class="container-fluid">
+    <a class="navbar-brand text-decoration-none text-light">Rick & Morty</a>
+  </div>
+</nav>
+
+<div class="container-fluid col-6 p-3">
+  <h4 class="">Nome do seu personagem favorito</h4>
+  <div class="d-flex" role="search">
+    <input class="form-control me-2" type="search" placeholder="Rick Sanchez..." aria-label="Search"
+      [formControl]="fieldSearch" nome="search">
+    <button class="btn btn-outline-success px-3" type="button" (click)="searchCharacter()">Procurar</button>
+  </div>
+</div>
+
+<app-select [(valueSelectStatus)]="valueSelectStatus" (valueSelectStatusChange)="onStatusChange()">
+</app-select>
+
+<div class="container-fluid d-flex justify-content-center p-2" style="
+    background: #d4e6d3;
+">
+  <div class="container-fluid d-flex justify-content-center border p-3">
+    <card-character *ngIf="!notFoundCharacter" [characters]="personCharacters" [loading]="loading">
+    </card-character>
+
+    <div *ngIf="notFoundCharacter" class="container-fluid text-center">
+      <h4>Personagem não encontrado : - </h4>
+      <p><i>Pesquise  novamente</i></p>
+    </div>
+  </div>
+</div>
