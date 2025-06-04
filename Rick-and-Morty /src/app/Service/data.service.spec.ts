@@ -29,70 +29,128 @@ describe('DataService', () => {
     expect((service as any).apiUrl).toBe(environment.apiUrl);
   });
 
-  it('should call getCharacterById and return a Character', () => {
-    const mockCharacter: Character = {
-      id: 1,
-      name: 'Rick Sanchez',
-      status: 'Alive',
-      species: 'Human',
-      type: '',
-      gender: 'Male',
-      origin: { name: 'Earth', url: '' },
-      location: { name: 'Earth', url: '' },
-      image: '',
-      episode: [],
-      created: ''
-    };
+  it('should call the correct API endpoint in getCharacterById and return the character', () => {
+    const mockCharacter: Character = { id: 1, name: 'Rick', status: 'Alive' } as Character;
+    const id = 1;
 
-    service.getCharacterById(1).subscribe(character => {
+    service.getCharacterById(id).subscribe(character => {
       expect(character).toEqual(mockCharacter);
     });
 
-    const requests = httpMock.match(`${environment.apiUrl}/character/1`);
-    expect(requests.length).toBe(2);
-    requests.forEach(req => {
-      expect(req.request.method).toBe('GET');
-      req.flush(mockCharacter);
-    });
-
-    it('should search characters (single page)', () => {
-      const mockResponse = {
-        info: { pages: 1 },
-        results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-      };
-
-      service.searchCharacters('Rick', 'Alive').subscribe(results => {
-        expect(results.length).toBe(1);
-        expect(results[0].name).toBe('Rick');
-      });
-
-      const req = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
-      expect(req.request.method).toBe('GET');
-      req.flush(mockResponse);
-    });
-
-    it('should search characters (multiple pages)', () => {
-      const mockResponsePage1 = {
-        info: { pages: 2 },
-        results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-      };
-      const mockResponsePage2 = {
-        results: [{ id: 2, name: 'Morty', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-      };
-
-      service.searchCharacters('Rick', 'Alive').subscribe(results => {
-        expect(results.length).toBe(2);
-        expect(results[0].name).toBe('Rick');
-        expect(results[1].name).toBe('Morty');
-      });
-
-      const req1 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
-      expect(req1.request.method).toBe('GET');
-      req1.flush(mockResponsePage1);
-
-      const req2 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive&page=2`);
-      expect(req2.request.method).toBe('GET');
-      req2.flush(mockResponsePage2);
-    });
+    const reqs = httpMock.match(
+      r => r.method === 'GET' && r.url === `${environment.apiUrl}/character/${id}`
+    );
+    expect(reqs.length).toBe(2);
+    reqs.forEach(req => req.flush(mockCharacter));
   });
+
+  it('should update characterByIdSignal after getCharacterById is called', () => {
+    const mockCharacter: Character = { id: 2, name: 'Morty', status: 'Alive' } as Character;
+    const id = 2;
+
+    service.getCharacterById(id).subscribe();
+
+    const reqs = httpMock.match(
+      r => r.method === 'GET' && r.url === `${environment.apiUrl}/character/${id}`
+    );
+    expect(reqs.length).toBe(2);
+    reqs[0].flush(mockCharacter);
+    reqs[1].flush(mockCharacter);
+
+    expect(service.characterById).toEqual(mockCharacter);
   });
+
+  it('should call the correct API endpoint in searchCharacters and return the characters', () => {
+    const mockCharacters: Character[] = [
+      { id: 1, name: 'Rick', status: 'Alive' } as Character,
+      { id: 2, name: 'Morty', status: 'Alive' } as Character
+    ];
+    const name = 'Rick';
+    const status = 'Alive';
+
+    service.searchCharacters(name, status).subscribe(characters => {
+      expect(characters).toEqual(mockCharacters);
+    });
+
+    const reqs = httpMock.match(
+      r =>
+        r.method === 'GET' &&
+        r.url === `${environment.apiUrl}/character/` &&
+        r.params.get('name') === name &&
+        r.params.get('status') === status
+    );
+    expect(reqs.length).toBe(2);
+    reqs.forEach(req => req.flush(mockCharacters));
+  });
+
+  it('should update searchCharactersSignal after searchCharacters is called', () => {
+    const mockCharacters: Character[] = [
+      { id: 3, name: 'Summer', status: 'Alive' } as Character
+    ];
+    const name = 'Summer';
+    const status = 'Alive';
+
+    service.searchCharacters(name, status).subscribe();
+
+    const reqs = httpMock.match(
+      r =>
+        r.method === 'GET' &&
+        r.url === `${environment.apiUrl}/character/` &&
+        r.params.get('name') === name &&
+        r.params.get('status') === status
+    );
+    expect(reqs.length).toBe(2);
+    reqs[0].flush(mockCharacters);
+    reqs[1].flush(mockCharacters);
+
+    expect(service.searchResults).toEqual(mockCharacters);
+  });
+
+it('should call the correct API endpoint in getCharacters and return the results', () => {
+  const mockResponse = {
+    info: { count: 2, pages: 1, next: null, prev: null },
+    results: [
+      { id: 1, name: 'Rick', status: 'Alive' } as Character,
+      { id: 2, name: 'Morty', status: 'Alive' } as Character
+    ]
+  };
+  const page = 1;
+
+  service.getCharacters(page).subscribe(response => {
+    expect(response).toEqual(mockResponse);
+  });
+
+  const req = httpMock.expectOne(
+    r =>
+      r.method === 'GET' &&
+      r.url === `${environment.apiUrl}/character/` &&
+      r.params.get('page') === page.toString()
+  );
+  expect(req).toBeTruthy();
+  req.flush(mockResponse);
+});
+
+it('should send the correct page parameter in getCharacters', () => {
+  const page = 3;
+  const mockResponse = {
+    info: { count: 10, pages: 5, next: null, prev: null },
+    results: [
+      { id: 5, name: 'Summer', status: 'Alive' } as Character
+    ]
+  };
+
+  service.getCharacters(page).subscribe(response => {
+    expect(response).toEqual(mockResponse);
+  });
+
+  const req = httpMock.expectOne(
+    r =>
+      r.method === 'GET' &&
+      r.url === `${environment.apiUrl}/character/` &&
+      r.params.get('page') === page.toString()
+  );
+  expect(req.request.params.get('page')).toBe(page.toString());
+  req.flush(mockResponse);
+});
+
+});
