@@ -38,9 +38,9 @@ Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty
 
 
 ## Testes unitários
-1. Para rodar os testes:
+1. Para rodar os testes unitários:
     ```bash
-   npm run test:coverage
+   clear && npm run test:coverage
     ```
 
 ### Serviços

@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Observable, map, mergeMap, of, toArray } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Character } from '../Interface/character';
@@ -10,42 +10,42 @@ import { Character } from '../Interface/character';
 export class DataService {
   private apiUrl = environment.apiUrl;
 
+  private characterByIdSignal = signal<Character | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getCharacterById(id: number | string): Observable<Character> {
+    this.http.get<Character>(`${this.apiUrl}/character/${id}`).subscribe(character => {
+      this.characterByIdSignal.set(character);
+    });
     return this.http.get<Character>(`${this.apiUrl}/character/${id}`);
   }
+
+  get characterById() {
+    return this.characterByIdSignal();
+  }
+
+  private searchCharactersSignal = signal<Character[]>([]);
 
   searchCharacters(name: string = '', status: string = ''): Observable<Character[]> {
     const params = new HttpParams()
       .set('name', name)
       .set('status', status);
 
-    return this.http.get<Character>(`${this.apiUrl}/character/`, { params }).pipe(
-      mergeMap(response => {
-        const totalPages = response['info'].pages;
-        const requests: Observable<Character>[] = [];
+    this.http.get<Character[]>(`${this.apiUrl}/character/`, { params }).subscribe(results => {
+      this.searchCharactersSignal.set(results);
+    });
 
-        for (let page = 2; page <= totalPages; page++) {
-          const pageParams = params.set('page', page.toString());
-          requests.push(this.http.get<Character>(`${this.apiUrl}/character/`, { params: pageParams }));
-        }
-
-        return of(response).pipe(
-          mergeMap(res => of(...requests).pipe(
-            mergeMap(req => req),
-            toArray(),
-            map(pages => [res, ...pages])
-          )),
-          map(responses => responses.flatMap(res => res['results']))
-        );
-      })
-    );
+    return this.http.get<Character[]>(`${this.apiUrl}/character/`, { params });
   }
 
-  getCharacters(page: number): Observable<Character> {
+  get searchResults() {
+    return this.searchCharactersSignal();
+  }
+
+  getCharacters(page: number): Observable<{ info: any; results: Character[] }> {
     const params = new HttpParams().set('page', page.toString());
-    return this.http.get<Character>(`${this.apiUrl}/character/`, { params });
+    return this.http.get<{ info: any; results: Character[] }>(`${this.apiUrl}/character/`, { params });
   }
+
 }

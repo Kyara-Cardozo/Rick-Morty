@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Character } from '../../Interface/character';
 import { DataService } from '../../Service/data.service';
@@ -9,7 +9,7 @@ import { DataService } from '../../Service/data.service';
   styleUrl: './details.component.scss',
 })
 export class DetailsComponent implements OnInit {
-  public detailCharacter: Character = {
+  detailCharacter = signal<Character>({
     name: '',
     status: '',
     species: '',
@@ -26,81 +26,113 @@ export class DetailsComponent implements OnInit {
     },
     episode: [],
     created: '',
-  };
+  });
 
-  private id: string | null = '0';
+  customFields = signal<{ label: string; value: string }[]>([]);
+
+  id = signal<string | null>('0');
+
   public urlImg: string = '';
-  public customFields: { label: string; value: string }[] = [];
 
 
   constructor(private route: ActivatedRoute, private service: DataService) { }
 
   ngOnInit() {
-    this.getParamUrl();
-    this.getByIdCharacter();
+    this.route.paramMap.subscribe(params => {
+      this.id.set(params.get('id'));
+      this.getByIdCharacter();
+    });
+  }
+  get paramUrl(): string | null {
+    return this.id();
   }
 
-  getParamUrl(): string {
-    try {
-      this.route.paramMap.subscribe((value) => (this.id = value.get('id')));
-    } catch (error) {
-      throw Error('Erro ao consultar a ID da URL: ' + error);
-    }
-    return this.id!;
-  }
 
   getByIdCharacter() {
-    try {
-      const savedCharacter = localStorage.getItem(`character-${this.id}`);
-      if (savedCharacter) {
-        const parsed = JSON.parse(savedCharacter);
-        this.detailCharacter = parsed.character;
-        this.customFields = parsed.customFields || [];
+    const idValue = this.id();
+    if (!idValue) return;
 
-      } else {
-        this.service.getCharacterById(this.id!).subscribe((data) => {
-          this.detailCharacter = data;
-        });
-      }
-    } catch (error) {
-      throw Error('Erro ao consultar o personagem: ' + error);
-    }
-  }
-
-  urlImgStatus(): string {
-    if (this.detailCharacter.status === 'Alive') {
-      this.urlImg = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Eo_circle_green_blank.svg/1024px-Eo_circle_green_blank.svg.png';
-    } else if (this.detailCharacter.status === 'Dead') {
-      this.urlImg = 'https://icones.pro/wp-content/uploads/2021/04/icone-cercle-rempli-rouge.png';
+    const savedCharacter = localStorage.getItem(`character-${idValue}`);
+    if (savedCharacter) {
+      const parsed = JSON.parse(savedCharacter);
+      this.detailCharacter.set(parsed.character);
+      this.customFields.set(parsed.customFields || []);
     } else {
-      this.urlImg = 'https://cdn-icons-png.flaticon.com/512/14/14934.png';
+      this.service.getCharacterById(idValue).subscribe((data) => {
+        this.detailCharacter.set(data);
+      });
     }
-    return this.urlImg;
   }
 
-  salvarEdicoes(): void {
+  urlImgStatus() {
+    const status = this.detailCharacter().status;
+    if (status === 'Alive') {
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Eo_circle_green_blank.svg/1024px-Eo_circle_green_blank.svg.png';
+    } else if (status === 'Dead') {
+      return 'https://icones.pro/wp-content/uploads/2021/04/icone-cercle-rempli-rouge.png';
+    } else {
+      return 'https://cdn-icons-png.flaticon.com/512/14/14934.png';
+    }
+  }
+
+
+  salvarEdicoes() {
     const dataParaSalvar = {
-      character: this.detailCharacter,
-      customFields: this.customFields,
+      character: this.detailCharacter(),
+      customFields: this.customFields(),
     };
-    localStorage.setItem(`character-${this.id}`, JSON.stringify(dataParaSalvar));
+    localStorage.setItem(`character-${this.id()}`, JSON.stringify(dataParaSalvar));
     alert('Alterações salvas com sucesso!');
   }
 
-  removerOrigem(): void {
+  removerOrigem() {
     const confirmado = confirm('Tem certeza que deseja excluir a origem?');
     if (confirmado) {
-      this.detailCharacter.origin.name = '';
+      const current = this.detailCharacter();
+      this.detailCharacter.set({
+        ...current,
+        origin: {
+          ...current.origin,
+          name: '',
+          url: current.origin.url,
+        },
+      });
       this.salvarEdicoes();
-      alert('Origem excluida!');
+      alert('Origem excluída!');
     }
   }
 
-  adicionarNovoCampo(): void {
+
+  adicionarNovoCampo() {
     const novaLabel = prompt('Digite o nome do novo campo:', 'Novo Campo');
     if (novaLabel) {
-      this.customFields.push({ label: novaLabel, value: '' });
+      this.customFields.update((fields) => [...fields, { label: novaLabel, value: '' }]);
     }
+  }
+
+  updateDetailCharacterField<K extends keyof Character>(field: K, value: Character[K]) {
+    this.detailCharacter.update((current) => ({ ...current, [field]: value }));
+  }
+  updateOriginField(value: string) {
+    this.detailCharacter.update((current) => ({
+      ...current,
+      origin: { ...current.origin, name: value },
+    }));
+  }
+
+  updateLocationField(value: string) {
+    this.detailCharacter.update((current) => ({
+      ...current,
+      location: { ...current.location, name: value },
+    }));
+  }
+
+  updateCustomFieldValue(index: number, value: string) {
+    this.customFields.update((fields) => {
+      const updated = [...fields];
+      updated[index] = { ...updated[index], value };
+      return updated;
+    });
   }
 }
 

@@ -1,36 +1,40 @@
 <div class="container-fluid p-2">
   <div class="container-fluid d-flex justify-content-center align-items-center border">
     <div class="card mb-3 col-4">
-      <img [src]="detailCharacter.image" class="card-img-top imgCharacter rounded" alt="logo-character">
+      <img [src]="detailCharacter().image" class="card-img-top imgCharacter rounded" alt="logo-character" />
 
       <div class="card-body border">
         <h5 class="card-title text-center mb-1">
-          <input [(ngModel)]="detailCharacter.name" class="form-control text-center" />
+          <input class="form-control text-center" [value]="detailCharacter().name"
+            (input)="updateDetailCharacterField('name', $any($event.target).value)" />
         </h5>
 
         <p class="m-0">
-          <b>Status:</b> {{ detailCharacter.status }}
+          <b>Status:</b> {{ detailCharacter().status }}
           <img [src]="urlImgStatus()" class="imgStatus" alt="status_img" />
         </p>
 
         <p class="card-text m-0">
           <b>Origem:</b>
-          <input [(ngModel)]="detailCharacter.origin.name" class="form-control" />
+          <input class="form-control" [value]="detailCharacter().origin.name"
+            (input)="updateOriginField($any($event.target).value)" />
         </p>
 
         <p class="card-text m-0">
           <b>Localização:</b>
-          <input [(ngModel)]="detailCharacter.location.name" class="form-control" />
+          <input class="form-control" [value]="detailCharacter().location.name"
+            (input)="updateLocationField($any($event.target).value)" />
         </p>
 
         <p class="card-text">
           <b>Quantos episódios participou:</b>
-          {{ detailCharacter.episode.length }}
+          {{ detailCharacter().episode.length }}
         </p>
 
-        <div *ngFor="let field of customFields; let i = index" class="mt-2">
+        <div *ngFor="let field of customFields(); let i = index" class="mt-2">
           <label><b>{{ field.label }}:</b></label>
-          <input [(ngModel)]="customFields[i].value" class="form-control" />
+          <input class="form-control" [value]="field.value"
+            (input)="updateCustomFieldValue(i, $any($event.target).value)" />
         </div>
 
         <div class="d-flex justify-content-center align-items-center gap-2 mt-3">

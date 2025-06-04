@@ -48,48 +48,51 @@ describe('DataService', () => {
       expect(character).toEqual(mockCharacter);
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/character/1`);
-    expect(req.request.method).toBe('GET');
-    req.flush(mockCharacter);
-  });
-  it('should search characters (single page)', () => {
-    const mockResponse = {
-      info: { pages: 1 },
-      results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-    };
-
-    service.searchCharacters('Rick', 'Alive').subscribe(results => {
-      expect(results.length).toBe(1);
-      expect(results[0].name).toBe('Rick');
+    const requests = httpMock.match(`${environment.apiUrl}/character/1`);
+    expect(requests.length).toBe(2);
+    requests.forEach(req => {
+      expect(req.request.method).toBe('GET');
+      req.flush(mockCharacter);
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
-    expect(req.request.method).toBe('GET');
-    req.flush(mockResponse);
-  });
+    it('should search characters (single page)', () => {
+      const mockResponse = {
+        info: { pages: 1 },
+        results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
+      };
 
-  it('should search characters (multiple pages)', () => {
-    const mockResponsePage1 = {
-      info: { pages: 2 },
-      results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-    };
-    const mockResponsePage2 = {
-      results: [{ id: 2, name: 'Morty', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
-    };
+      service.searchCharacters('Rick', 'Alive').subscribe(results => {
+        expect(results.length).toBe(1);
+        expect(results[0].name).toBe('Rick');
+      });
 
-    service.searchCharacters('Rick', 'Alive').subscribe(results => {
-      expect(results.length).toBe(2);
-      expect(results[0].name).toBe('Rick');
-      expect(results[1].name).toBe('Morty');
+      const req = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    const req1 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
-    expect(req1.request.method).toBe('GET');
-    req1.flush(mockResponsePage1);
+    it('should search characters (multiple pages)', () => {
+      const mockResponsePage1 = {
+        info: { pages: 2 },
+        results: [{ id: 1, name: 'Rick', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
+      };
+      const mockResponsePage2 = {
+        results: [{ id: 2, name: 'Morty', status: 'Alive', species: '', type: '', gender: '', origin: { name: '', url: '' }, location: { name: '', url: '' }, image: '', episode: [], created: '' }]
+      };
 
-    const req2 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive&page=2`);
-    expect(req2.request.method).toBe('GET');
-    req2.flush(mockResponsePage2);
+      service.searchCharacters('Rick', 'Alive').subscribe(results => {
+        expect(results.length).toBe(2);
+        expect(results[0].name).toBe('Rick');
+        expect(results[1].name).toBe('Morty');
+      });
+
+      const req1 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive`);
+      expect(req1.request.method).toBe('GET');
+      req1.flush(mockResponsePage1);
+
+      const req2 = httpMock.expectOne(`${environment.apiUrl}/character/?name=Rick&status=Alive&page=2`);
+      expect(req2.request.method).toBe('GET');
+      req2.flush(mockResponsePage2);
+    });
   });
-
-});
+  });

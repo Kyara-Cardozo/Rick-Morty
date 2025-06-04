@@ -2,13 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SelectComponent } from './select.component';
 import { By } from '@angular/platform-browser';
 
+
 describe('SelectComponent', () => {
   let component: SelectComponent;
   let fixture: ComponentFixture<SelectComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SelectComponent]
+      declarations: [SelectComponent, SelectComponent, ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SelectComponent);

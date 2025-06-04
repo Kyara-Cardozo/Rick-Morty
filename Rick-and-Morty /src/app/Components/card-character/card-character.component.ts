@@ -1,14 +1,15 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, signal, computed } from '@angular/core';
 import { Character } from '../../Interface/character';
 
 @Component({
   selector: 'card-character',
   templateUrl: './card-character.component.html',
   styleUrl: './card-character.component.scss',
+
 })
 export class CardCharacterComponent {
-  @Input() characters: Character[] = [];
-  @Input() loading?: boolean;
+  characters = input<Character[]>([]);
+  loading = input<boolean>(false);
 
-
+  isLoading = computed(() => this.loading());
 }

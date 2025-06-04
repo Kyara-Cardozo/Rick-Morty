@@ -1,116 +1,110 @@
 import {
-  ChangeDetectorRef,
   Component,
+  effect,
   HostListener,
-  OnInit,
+  signal,
 } from '@angular/core';
 import { Character } from '../../Interface/character';
 import { DataService } from '../../Service/data.service';
 import { FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-characters',
   templateUrl: './characters.component.html',
 })
-export class CharactersComponent implements OnInit {
-  public personCharacters: Character[] = [];
-  public page: number = 1;
-  public loading: boolean = false;
-  public fieldSearch: FormControl = new FormControl('');
-  public checkSearch: boolean = false;
-  public notFoundCharacter: boolean = false;
-  public valueSelectStatus: string = '';
+export class CharactersComponent {
+  personCharacters = signal<Character[]>([]);
+  loading = signal(false);
+  page = signal(1);
+  checkSearch = signal(false);
+  notFoundCharacter = signal(false);
+  valueSelectStatus = signal<string>('');
 
-  constructor(private service: DataService, private cd: ChangeDetectorRef) {}
+  fieldSearch = new FormControl('');
+  fieldSearchSignal = toSignal(
+    this.fieldSearch.valueChanges.pipe(debounceTime(1000), distinctUntilChanged()),
+    { initialValue: '' }
+  );
+
+  constructor(private service: DataService) {
+    effect(() => {
+      const value = this.fieldSearchSignal();
+
+      if (value === '') {
+        queueMicrotask(() => this.resetSearch());
+      } else {
+        queueMicrotask(() => this.searchCharacter());
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadCharacters();
-    this.setupSearch();
   }
 
   loadCharacters() {
-    try {
-      this.loading = true;
-      this.service.getCharacters(this.page).subscribe(
-        (response) => {
-          this.personCharacters = [
-            ...this.personCharacters,
-            ...response['results'],
-          ];
-          this.loading = false;
-          this.cd.detectChanges();
-        },
-        (error) => {
-          console.error('Erro na resposta character:', error);
-        }
-      );
-    } catch (error) {
-      throw new Error('Error na requisição do character: ' + error);
-    }
+    this.loading.set(true);
+    this.service.getCharacters(this.page()).subscribe({
+      next: (response) => {
+        const currentChars = this.personCharacters();
+        const newChars = [...currentChars, ...response['results']];
+        this.personCharacters.set(newChars);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erro na resposta character:', err);
+        this.loading.set(false);
+      },
+    });
   }
+
 
   @HostListener('window:scroll', ['$event'])
   infiniteScroll() {
-    if (this.checkSearch) {
-      return;
-    }
+    if (this.checkSearch()) return;
 
     if (
       window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-      !this.loading
+      !this.loading()
     ) {
-      this.page++;
+      this.page.set(this.page() + 1);
       this.loadCharacters();
     }
   }
 
-  setupSearch() {
-     this.fieldSearch.valueChanges
-      .pipe(debounceTime(1000), distinctUntilChanged())
-      .subscribe((value: string) => {
-        if (value === '') {
-          this.resetSearch();
-        } else {
-          this.searchCharacter();
-        }
+  searchCharacter() {
+    this.loading.set(true);
+    this.service
+      .searchCharacters(this.fieldSearch.value ?? '', this.valueSelectStatus())
+      .subscribe({
+        next: (data) => {
+          this.personCharacters.set(data);
+          this.checkSearch.set(true);
+          this.notFoundCharacter.set(false);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          if (err.status === 404) {
+            this.notFoundCharacter.set(true);
+            this.personCharacters.set([]);
+          }
+          this.loading.set(false);
+        },
       });
   }
 
-  searchCharacter() {
-    try {
-      this.loading = true;
-      this.service
-        .searchCharacters(this.fieldSearch.value, this.valueSelectStatus)
-        .subscribe(
-          (data) => {
-            this.personCharacters = data;
-            this.checkSearch = true;
-            this.loading = false;
-            this.cd.detectChanges();
-          },
-          (err) => {
-            if (err.status === 404) {
-              this.notFoundCharacter = true;
-            }
-            this.loading = false;
-          }
-        );
-    } catch (error) {
-      throw new Error('Erro na requisição de busca pelo input: ' + error);
-    }
-  }
-
   resetSearch() {
-    this.checkSearch = false;
-    this.notFoundCharacter = false;
-    this.page = 1;
-    this.personCharacters = [];
+    this.checkSearch.set(false);
+    this.notFoundCharacter.set(false);
+    this.page.set(1);
+    this.personCharacters.set([]);
     this.loadCharacters();
   }
 
   onStatusChange() {
-    if (this.valueSelectStatus === '') {
+    if (this.valueSelectStatus() === '') {
       this.resetSearch();
     } else {
       this.searchCharacter();

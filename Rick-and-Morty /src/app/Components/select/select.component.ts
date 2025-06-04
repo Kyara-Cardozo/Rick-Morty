@@ -1,4 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, NgModule, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+
 
 @Component({
   selector: 'app-select',
