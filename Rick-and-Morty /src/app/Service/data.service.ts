@@ -10,6 +10,7 @@ import { Character } from '../Interface/character';
 export class DataService {
   private apiUrl = environment.apiUrl;
 
+
   constructor(private http: HttpClient) {}
 
   getCharacterById(id: number | string): Observable<Character> {

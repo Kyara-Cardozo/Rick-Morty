@@ -16,6 +16,8 @@ describe('CharactersComponent', () => {
       getCharacters: jest.fn(),
       searchCharacters: jest.fn(),
     };
+    mockService.getCharacters.mockReturnValue(of({ results: [] }));
+
     mockCd = { detectChanges: jest.fn() };
 
     TestBed.configureTestingModule({
@@ -106,6 +108,72 @@ describe('CharactersComponent', () => {
       component.valueSelectStatus = 'Alive';
       component.onStatusChange();
       expect(searchSpy).toHaveBeenCalled();
+    });
+  });
+  it('should call loadCharacters and setupSearch on ngOnInit', () => {
+    mockService.getCharacters.mockReturnValue(of({ results: [] })); // <-- mocka o retorno!
+    const loadSpy = jest.spyOn(component, 'loadCharacters');
+    const setupSpy = jest.spyOn(component, 'setupSearch');
+    component.ngOnInit();
+    expect(loadSpy).toHaveBeenCalled();
+    expect(setupSpy).toHaveBeenCalled();
+  });
+  describe('infiniteScroll', () => {
+    it('should return early if checkSearch is true', () => {
+      component.checkSearch = true;
+      const loadSpy = jest.spyOn(component, 'loadCharacters');
+      component.infiniteScroll();
+      expect(loadSpy).not.toHaveBeenCalled();
+    });
+
+    it('should call loadCharacters and increment page if scroll near bottom and not loading', () => {
+      mockService.getCharacters.mockReturnValue(of({ results: [] })); // <-- Adicione esta linha!
+      component.checkSearch = false;
+      component.loading = false;
+      component.page = 1;
+      const loadSpy = jest.spyOn(component, 'loadCharacters');
+
+      // Mock window and document values
+      Object.defineProperty(window, 'innerHeight', { value: 1000, writable: true });
+      Object.defineProperty(window, 'scrollY', { value: 2000, writable: true });
+      Object.defineProperty(document.body, 'offsetHeight', { value: 2400, writable: true });
+
+      component.infiniteScroll();
+
+      expect(component.page).toBe(2);
+      expect(loadSpy).toHaveBeenCalled();
+    });
+
+    it('should not call loadCharacters if loading is true', () => {
+      component.checkSearch = false;
+      component.loading = true;
+      component.page = 1;
+      const loadSpy = jest.spyOn(component, 'loadCharacters');
+
+      Object.defineProperty(window, 'innerHeight', { value: 1000, writable: true });
+      Object.defineProperty(window, 'scrollY', { value: 2000, writable: true });
+      Object.defineProperty(document.body, 'offsetHeight', { value: 2400, writable: true });
+
+      component.infiniteScroll();
+
+      expect(component.page).toBe(1);
+      expect(loadSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not call loadCharacters if not near bottom', () => {
+      component.checkSearch = false;
+      component.loading = false;
+      component.page = 1;
+      const loadSpy = jest.spyOn(component, 'loadCharacters');
+
+      Object.defineProperty(window, 'innerHeight', { value: 500, writable: true });
+      Object.defineProperty(window, 'scrollY', { value: 200, writable: true });
+      Object.defineProperty(document.body, 'offsetHeight', { value: 3000, writable: true });
+
+      component.infiniteScroll();
+
+      expect(component.page).toBe(1);
+      expect(loadSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,26 +1,50 @@
-<div class="container-fluid p-2" >
+<div class="container-fluid p-2">
   <div class="container-fluid d-flex justify-content-center align-items-center border">
     <div class="card mb-3 col-4">
       <img [src]="detailCharacter.image" class="card-img-top imgCharacter rounded" alt="logo-character">
-      <div class="card-body  border">
-        <h5 class="card-title text-center mb-1">{{detailCharacter.name}}</h5>
-        <p class="m-0"><b>Status:</b> {{detailCharacter.status}}
-          <img [src]="urlImgStatus()" class="imgStatus" alt="status_img">
+
+      <div class="card-body border">
+        <h5 class="card-title text-center mb-1">
+          <input [(ngModel)]="detailCharacter.name" class="form-control text-center" />
+        </h5>
+
+        <p class="m-0">
+          <b>Status:</b> {{ detailCharacter.status }}
+          <img [src]="urlImgStatus()" class="imgStatus" alt="status_img" />
         </p>
-        <p class="card-text m-0"><b>Origem:</b> {{detailCharacter.origin.name}}</p>
-        <p class="card-text m-0"><b>Localização:</b> {{detailCharacter.location.name}}</p>
-        <p class="card-text"><b>Quantos episódios participou:</b>
-          {{detailCharacter.episode.length}}
+
+        <p class="card-text m-0">
+          <b>Origem:</b>
+          <input [(ngModel)]="detailCharacter.origin.name" class="form-control" />
         </p>
-        <div class="container-fluid d-flex justify-content-center align-items-center p-0">
-          <button type="button" class="btn btn-primary p-2" >
+
+        <p class="card-text m-0">
+          <b>Localização:</b>
+          <input [(ngModel)]="detailCharacter.location.name" class="form-control" />
+        </p>
+
+        <p class="card-text">
+          <b>Quantos episódios participou:</b>
+          {{ detailCharacter.episode.length }}
+        </p>
+
+        <div *ngFor="let field of customFields; let i = index" class="mt-2">
+          <label><b>{{ field.label }}:</b></label>
+          <input [(ngModel)]="customFields[i].value" class="form-control" />
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
+          <button class="btn btn-success" (click)="salvarEdicoes()">Salvar</button>
+          <button class="btn btn-danger" (click)="removerOrigem()">Excluir Origem</button>
+          <button class="btn btn-secondary" (click)="adicionarNovoCampo()">Novo Item</button>
+        </div>
+
+        <div class="container-fluid d-flex justify-content-center align-items-center p-0 mt-3">
+          <button type="button" class="btn btn-primary p-2">
             <a href="/" class="m-0 text-decoration-none text-light">Voltar para lista</a>
           </button>
         </div>
       </div>
-
-
-
     </div>
   </div>
 </div>
