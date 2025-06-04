@@ -12,7 +12,7 @@ Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty
 ## Instalação
 1. Clone o repositório:
     ```bash
-    git clone 
+    git clone https://github.com/Kyara-Cardozo/Rick-Morty.git
     ```
 2. Navegue até o diretório do projeto:
     ```bash
@@ -32,7 +32,7 @@ Trata-se de uma aplicação Angular que consome a API pública de Rick and Morty
     ```
 
 ## Componentes Principais
-### Pages
+### Paginas
 - **Characters**: Characters: Página principal, responsável por exibir a listagem de personagens.
 - **Details**: Página destinada à exibição dos detalhes de um personagem específico.
 
